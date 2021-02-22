@@ -1,4 +1,3 @@
-use crate::GuildId;
 use serde::{Serialize, Deserialize};
 
 // TODO(james7132): Properly implement a op-code based deserializer
@@ -21,7 +20,7 @@ pub(super) enum ClientResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct PlayerUpdate {
-    pub guild_id: GuildId,
+    pub guild_id: u64,
     pub state: serde_json::Value,
 }
 
@@ -46,13 +45,13 @@ pub(super) struct TrackExceptionEvent {
 pub(super) struct TrackStuckEvent {
     pub track: String,
     #[serde(rename = "thresholdMs")]
-    pub threshold_ms: GuildId
+    pub threshold_ms: u64
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct VoiceUpdate {
     #[serde(alias = "guildId")]
-    pub guild_id: GuildId,
+    pub guild_id: u64,
     pub session_id: String,
     pub event: String,
 }
@@ -60,7 +59,7 @@ pub(super) struct VoiceUpdate {
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct PlayTrack {
     #[serde(alias = "guildId")]
-    pub guild_id: GuildId,
+    pub guild_id: u64,
     pub track: String,
     pub start_time: u32,
     pub end_time: u32,
@@ -72,27 +71,27 @@ pub(super) struct PlayTrack {
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct Stop {
     #[serde(alias = "guildId")]
-    pub guild_id: GuildId,
+    pub guild_id: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct Seek {
     #[serde(alias = "guildId")]
-    pub guild_id: GuildId,
+    pub guild_id: u64,
     pub position: u32
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct SetVolume {
     #[serde(alias = "guildId")]
-    pub guild_id: GuildId,
+    pub guild_id: u64,
     pub volume: u16
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct SetEq {
     #[serde(alias = "guildId")]
-    pub guild_id: GuildId,
+    pub guild_id: u64,
     pub bands: Vec<EqBand>,
 }
 
@@ -105,5 +104,5 @@ pub(super) struct EqBand {
 #[derive(Debug, Serialize, Deserialize)]
 pub(super) struct Destroy {
     #[serde(alias = "guildId")]
-    pub guild_id: GuildId,
+    pub guild_id: u64,
 }

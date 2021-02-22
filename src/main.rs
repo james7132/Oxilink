@@ -1,61 +1,37 @@
 mod websocket;
 mod player;
+mod error;
 
-use actix_web::{web, get, App, Error, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{
+    web, get, App, HttpRequest, Responder, HttpServer,
+    http::header::HeaderMap,
+};
+use std::str::FromStr;
 use actix_web_actors::ws;
-use dashmap::DashMap;
-use std::sync::Arc;
+use error::HeaderError;
 
-type GuildId = u64;
-
-struct AppStateRef {
-    pub players: DashMap<GuildId, player::Player>
-}
-
-#[derive(Clone)]
-pub(crate) struct AppState(Arc<AppStateRef>);
-
-impl AppState {
-
-    pub fn new() -> Self {
-        Self(Arc::new(AppStateRef {
-            players: DashMap::new()
-        }))
-    }
-
-    fn create_player(&self, guild_id: GuildId) -> player::Player {
-        let player = player::Player::new(guild_id);
-        self.0.players.insert(guild_id, player.clone());
-        player
-    }
-
-    fn get_player(&self, guild_id: GuildId) -> Option<player::Player> {
-        self.0.players.get(&guild_id).map(|kv| (*kv.value()).clone())
-    }
-
-    fn destroy_player(&self, guild_id: GuildId) {
-        self.0.players.remove(&guild_id);
-    }
-
+fn get_header_as<T: FromStr>(headers: &HeaderMap, header: &str) -> Result<T, HeaderError> {
+    headers.get(header)
+        .ok_or_else(|| HeaderError::Missing(header.to_owned()))
+        .and_then(|id| id.to_str().map_err(|_| HeaderError::Missing(header.to_owned())))
+        .and_then(|id| id.parse::<T>().map_err(|_| HeaderError::Parse(header.to_owned())))
 }
 
 #[get("/ws/")]
-async fn index(
-    req: HttpRequest,
-    stream: web::Payload,
-    state: web::Data<AppState>) -> Result<HttpResponse, Error>
-{
-    let resp = ws::start(websocket::OxilinkWs::new(state.get_ref().clone()), &req, stream);
-    println!("{:?}", resp);
-    resp
+async fn index(req: HttpRequest, stream: web::Payload) -> impl Responder {
+    let headers = req.headers();
+    let auth = get_header_as::<String>(&headers, "Authorization")?;
+    let user_id = songbird::id::UserId(get_header_as(&headers, "User-Id")?);
+    let shard_count = get_header_as::<u64>(&headers, "Num-Shards")?;
+
+    let context = websocket::OxilinkWs::new(user_id, shard_count);
+    ws::start(context, &req, stream)
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let state = AppState::new();
     HttpServer::new(move || {
         App::new()
-            .data(state.clone())
             .service(index)
     })
     .bind("127.0.0.1:8080")?
