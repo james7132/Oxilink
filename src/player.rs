@@ -4,6 +4,7 @@ use songbird::{
     input::Input,
     tracks::TrackHandle
 };
+use std::time::Duration;
 
 #[derive(Clone)]
 pub(crate) struct Player {
@@ -20,6 +21,10 @@ impl Player {
         }
     }
 
+    pub fn is_playing(&self) -> bool {
+        self.currently_playing.is_some()
+    }
+
     pub async fn connect(&mut self, info: songbird::ConnectionInfo) {
         self.call.connect(info).await;
     }
@@ -29,19 +34,41 @@ impl Player {
     }
 
     pub fn stop(&mut self) {
-        self.call.stop();
+        if let Some(handle) = self.currently_playing.as_mut() {
+            handle.stop();
+        }
     }
 
     pub fn set_volume(&mut self, volume: u16) {
+        if let Some(handle) = self.currently_playing.as_mut() {
+            handle.set_volume(f32::from(volume) / 100.0);
+        }
     }
 
     pub fn set_band_gain(&mut self, band: u8, gain: f32) {
+        // TODO(james7132): Implement
     }
 
     pub fn set_paused(&mut self, paused: bool) {
+        if let Some(handle) = self.currently_playing.as_mut() {
+            if paused {
+                handle.pause();
+            } else {
+                handle.play();
+            }
+            // TODO(james7132): Handle error here
+        }
     }
 
     pub fn seek_to(&mut self, position: u64) {
+        if let Some(handle) = self.currently_playing.as_mut() {
+            if handle.is_seekable() {
+                // TODO(james7132): Replicate the sample seeking
+                handle.seek_time(Duration::from_millis(position));
+            } else {
+                // TODO(james7132): Handle error
+            }
+        }
     }
 
 }
