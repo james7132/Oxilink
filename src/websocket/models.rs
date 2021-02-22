@@ -55,15 +55,22 @@ pub(super) struct TrackStuckEvent {
     pub threshold_ms: u64
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub(super) struct VoiceUpdate {
     #[serde(alias = "guildId")]
     pub guild_id: u64,
+    #[serde(alias = "sessionId")]
     pub session_id: String,
-    pub event: String,
+    pub event: VoiceUpdateEvent,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
+pub(super) struct VoiceUpdateEvent {
+    pub endpoint: Option<String>,
+    pub token: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub(super) struct PlayTrack {
     #[serde(alias = "guildId")]
     pub guild_id: u64,
@@ -85,7 +92,7 @@ pub(super) struct Stop {
 pub(super) struct Seek {
     #[serde(alias = "guildId")]
     pub guild_id: u64,
-    pub position: u32
+    pub position: u64
 }
 
 #[derive(Debug, Serialize, Deserialize)]

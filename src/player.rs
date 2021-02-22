@@ -1,4 +1,3 @@
-use std::sync::{Arc, RwLock};
 use songbird::{
     Call,
     id::{UserId, GuildId},
@@ -6,36 +5,43 @@ use songbird::{
     tracks::TrackHandle
 };
 
-struct PlayerRef {
+#[derive(Clone)]
+pub(crate) struct Player {
     call: Call,
     currently_playing: Option<TrackHandle>
 }
 
-#[derive(Clone)]
-pub(crate) struct Player(Arc<RwLock<PlayerRef>>);
-
 impl Player {
 
     pub fn new(guild_id: GuildId, user_id: UserId) -> Self {
-        Self(Arc::new(RwLock::new(PlayerRef {
+        Self {
             call: Call::standalone(guild_id, user_id),
             currently_playing: None
-        })))
+        }
     }
 
-    pub fn play(&self, source: Input) {
-        let mut player_ref = self.0.write().unwrap();
-        player_ref.currently_playing = Some(player_ref.call.play_only_source(source));
+    pub async fn connect(&mut self, info: songbird::ConnectionInfo) {
+        self.call.connect(info).await;
     }
 
-    pub fn stop(&self) {
-        self.0.write().unwrap().call.stop();
+    pub fn play(&mut self, source: Input) {
+        self.currently_playing = Some(self.call.play_only_source(source));
     }
 
-    pub fn set_paused(&self, paused: bool) {
+    pub fn stop(&mut self) {
+        self.call.stop();
     }
 
-    pub fn seek_to(&self, position: u64) {
+    pub fn set_volume(&mut self, volume: u16) {
+    }
+
+    pub fn set_band_gain(&mut self, band: u8, gain: f32) {
+    }
+
+    pub fn set_paused(&mut self, paused: bool) {
+    }
+
+    pub fn seek_to(&mut self, position: u64) {
     }
 
 }
