@@ -1,14 +1,21 @@
 use serde::{Serialize, Deserialize};
 
-// TODO(james7132): Properly implement a op-code based deserializer
 #[derive(Debug, Deserialize)]
+#[serde(tag = "op")]
 pub(super) enum ClientMessage {
+    #[serde(rename = "voiceUpdate")]
     VoiceUpdate(VoiceUpdate),
+    #[serde(rename = "play")]
     PlayTrack(PlayTrack),
+    #[serde(rename = "stop")]
     Stop(Stop),
+    #[serde(rename = "seek")]
     Seek(Seek),
+    #[serde(rename = "volume")]
     SetVolume(SetVolume),
+    #[serde(rename = "equalizer")]
     SetEq(SetEq),
+    #[serde(rename = "destroy")]
     Destroy(Destroy)
 }
 

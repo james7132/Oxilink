@@ -38,12 +38,7 @@ impl OxilinkWs {
     }
 
     fn handle_text(&self, raw_text: &str) -> Result<(), serde_json::Error> {
-         self.handle_message(serde_json::from_str(raw_text)?);
-         Ok(())
-    }
-
-    fn handle_message(&self, message: ClientMessage) {
-        match message {
+        match serde_json::from_str(raw_text)? {
             ClientMessage::VoiceUpdate(evt) => self.handle_voice_update(evt),
             ClientMessage::PlayTrack(evt) => self.handle_play(evt),
             ClientMessage::Stop(evt) => self.handle_stop(evt),
@@ -52,6 +47,7 @@ impl OxilinkWs {
             ClientMessage::SetEq(evt) => self.handle_set_eq(evt),
             ClientMessage::Destroy(evt) => self.destroy_player(GuildId(evt.guild_id)),
         }
+        Ok(())
     }
 
     fn handle_voice_update(&self, evt: models::VoiceUpdate) {
